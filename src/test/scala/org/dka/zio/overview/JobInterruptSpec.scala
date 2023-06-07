@@ -52,7 +52,6 @@ object JobInterruptSpec extends ZIOSpecDefault {
         //
         assertTrue(
           exit.isSuccess,
-        // exit contains the result of the fiber, in this case a Timing instance
         exit.exists(_.finish.isDefined)
         )
       }
