@@ -8,12 +8,13 @@ import zio.test.Assertion.*
 
 object ResourceSpec extends ZIOSpecDefault {
 
-  private val logger = Logger(getClass.getName)
+  private val logger       = Logger(getClass.getName)
+
   private val updatedValue = 42
+
   private val initialValue = 120
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("resources") (
-
+  override def spec: Spec[TestEnvironment with Scope, Any] = suite("resources")(
     test("fail to acquire a held resource") {
       val heldResource: IntegerResource = IntegerResource(data = initialValue, isHeld = true)
       val effect: IntegerResource.ZioAttempt =
@@ -37,7 +38,6 @@ object ResourceSpec extends ZIOSpecDefault {
         heldResource.data == initialValue
       )
     },
-
     test("modify a free resource") {
       // get the resource, do something on the resource, free the resource
       val resource = IntegerResource(data = initialValue)
@@ -61,7 +61,6 @@ object ResourceSpec extends ZIOSpecDefault {
         result.map(_.isHeld) == Right(false)
       )
     },
-
     test("fail nested acquire") {
       val resource = IntegerResource(data = initialValue)
       val effect: ZioAttempt = ZIO.acquireReleaseWith(IntegerResource.acquire(resource))(IntegerResource.release) {

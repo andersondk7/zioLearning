@@ -15,15 +15,11 @@ import zio.{ZIO, *}
 // as such you can't use a case class to represent a resource (since it is mutable)
 // so the implementations are all mutable classes ...
 
-final case class IntegerResource(var isHeld: Boolean = false,
-                            var data: Int = 0
-                           ) { }
-
+final case class IntegerResource(var isHeld: Boolean = false, var data: Int = 0) {}
 
 object IntegerResource {
+
   private val logger = Logger(getClass.getName)
-
-
 
   type ZioAttempt = ZIO[Any, Nothing, Either[IllegalStateException, IntegerResource]]
 
@@ -39,14 +35,15 @@ object IntegerResource {
     }
   }
 
-  def release( attempt: Either[IllegalStateException, IntegerResource] ): ZioAttempt = {
+  def release(attempt: Either[IllegalStateException, IntegerResource]): ZioAttempt = {
     logger.info(s"releasing attempt: $attempt")
-    val action = attempt.map(resource => {
+    val action = attempt.map { resource =>
       resource.isHeld = false
       resource
-    })
+    }
     logger.info(s"letting go of: $action")
 
     ZIO.succeed(action)
   }
+
 }

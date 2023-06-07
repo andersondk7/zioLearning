@@ -9,28 +9,27 @@ import scala.concurrent.duration.*
 
 object JobSpec extends ZIOSpecDefault {
 
-  private val logger         = Logger(getClass.getName)
+  private val logger = Logger(getClass.getName)
 
-  private val OneSecondJob   = BlockingJob(1.second)
+  private val OneSecondJob = BlockingJob(1.second)
 
-  private val TwoSecondJob   = BlockingJob(2.second)
+  private val TwoSecondJob = BlockingJob(2.second)
 
   private val ThreeSecondJob = BlockingJob(3.second)
 
-  private val firstException = new Exception("first failed")
+  private val firstException  = new Exception("first failed")
+
   private val secondException = new Exception("second  failed")
 
   private def pause(duration: FiniteDuration = 10.millis): Unit = Thread.sleep(duration.toMillis)
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs") (
-
+  override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs")(
     test("single job") {
       for {
         fiber  <- BlockingJob.run(OneSecondJob).fork
         result <- fiber.join
       } yield assertTrue(result.finish.isDefined)
     },
-    
     test("wait on single job") {
       for {
         fiber  <- BlockingJob.run(OneSecondJob).fork
@@ -43,7 +42,6 @@ object JobSpec extends ZIOSpecDefault {
         assertTrue(result.finish.isDefined)
       }
     },
-    
     test("exit success") {
       for {
         fiber  <- BlockingJob.run(OneSecondJob).fork
@@ -55,7 +53,6 @@ object JobSpec extends ZIOSpecDefault {
         assertTrue(exit.isSuccess)
       }
     },
-    
     test("exit interrupt immediately") {
       for {
         fiber <- BlockingJob.run(TwoSecondJob).fork
@@ -90,7 +87,6 @@ object JobSpec extends ZIOSpecDefault {
         assertTrue(true)
       }
     },
-    
     test("fiber fails with message") {
       val message = "expected"
       for {
@@ -106,7 +102,6 @@ object JobSpec extends ZIOSpecDefault {
           })
       }
     },
-    
     test("fiber fails with cause") {
       val cause = new Exception("expected")
       for {
@@ -117,7 +112,6 @@ object JobSpec extends ZIOSpecDefault {
         assert(result)(isLeft(equalTo(cause)))
       }
     },
-    
     test("compose with zip") {
       for {
         j1 <- BlockingJob.run(OneSecondJob).fork
@@ -131,7 +125,6 @@ object JobSpec extends ZIOSpecDefault {
         assertTrue(tuple._2.start < tuple._1.finish.get) // j2 started before j1 finished
       }
     },
-    
     test("compose first longer than second") {
       for {
         j1 <- BlockingJob.run(TwoSecondJob).fork
@@ -145,7 +138,6 @@ object JobSpec extends ZIOSpecDefault {
         assertTrue(result.duration.get > 1200L)
       }
     },
-    
     test("compose first shorter than second") {
       for {
         j1 <- BlockingJob.run(OneSecondJob).fork
@@ -163,7 +155,6 @@ object JobSpec extends ZIOSpecDefault {
         //
       }
     },
-    
     test("compose first fail") {
       val message = "expected"
       for {
@@ -182,7 +173,6 @@ object JobSpec extends ZIOSpecDefault {
         )
       }
     },
-    
     test("compose first and second fail") {
       for {
         j1 <- BlockingJob.runFail(ThreeSecondJob, firstException).fork // will fail after about 1.5 seconds
@@ -195,51 +185,49 @@ object JobSpec extends ZIOSpecDefault {
         assert(result)(isLeft(equalTo(secondException)))
       }
     },
-    
     test("take the first completed") {
-      val longer = BlockingJob.run(TwoSecondJob)
+      val longer  = BlockingJob.run(TwoSecondJob)
       val shorter = BlockingJob.run(OneSecondJob)
       for {
         result <- longer.race(shorter) // jobs start here!
       } yield {
         logger.info(s"result: $result")
-        assertTrue(result.finish.isDefined,
+        assertTrue(
+          result.finish.isDefined,
           result.duration.get < 1100L // the OneSecondJob
         )
       }
     },
-    
     test("take the first completed of multiple") {
       val j3 = BlockingJob.run(ThreeSecondJob)
       val j2 = BlockingJob.run(TwoSecondJob)
       val j1 = BlockingJob.run(OneSecondJob)
       for {
-        result   <- j3.race(j2).race(j1) // jobs start here!
+        result <- j3.race(j2).race(j1) // jobs start here!
       } yield {
         logger.info(s"result: $result")
-        assertTrue(result.finish.isDefined,
+        assertTrue(
+          result.finish.isDefined,
           result.duration.get < 1100L // the OneSecondJob
         )
       }
     },
-    
     test("take the first success when one fails of multiple") {
       val j3 = BlockingJob.run(ThreeSecondJob)
       val j2 = BlockingJob.run(TwoSecondJob)
       val j1 = BlockingJob.runFail(OneSecondJob, new Exception("first failed"))
       for {
-        result   <- j3.race(j2).race(j1) // jobs start here!
+        result <- j3.race(j2).race(j1) // jobs start here!
       } yield {
         assert(result)(isSubtype[Timing](anything))
         val timing = result.asInstanceOf[Timing]
-        assertTrue (
+        assertTrue(
           timing.finish.isDefined,
           timing.duration.get > 1100L, // the OneSecondJob failed
-          timing.duration.get < 2100L // the TwoSecondJob is the one that would succeed
+          timing.duration.get < 2100L  // the TwoSecondJob is the one that would succeed
         )
       }
     },
-    
     test("take the first success or failure when one fails of multiple") {
       // the race method works on effects, not fibers...
       val j3 = BlockingJob.run(ThreeSecondJob)
@@ -253,4 +241,5 @@ object JobSpec extends ZIOSpecDefault {
       }
     }
   )
+
 }

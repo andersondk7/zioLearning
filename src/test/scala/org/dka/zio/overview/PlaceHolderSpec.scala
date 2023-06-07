@@ -9,9 +9,10 @@ object PlaceHolderSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("placeHolder") (
+  override def spec: Spec[TestEnvironment with Scope, Any] = suite("placeHolder")(
     test("placeholder") {
-        assertTrue(true)
+      assertTrue(true)
     }
   )
+
 }
