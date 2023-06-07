@@ -34,6 +34,7 @@ final case class BlockingJob(duration: FiniteDuration)
 
 /**
  * execution of blocking jobs
+ * see zio documentation at https://zio.dev/overview/creating-effects#blocking-synchronous-code
  */
 object BlockingJob {
 

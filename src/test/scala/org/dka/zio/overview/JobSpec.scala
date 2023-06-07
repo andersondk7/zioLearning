@@ -4,6 +4,8 @@ import com.typesafe.scalalogging.Logger
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import zio.Fiber.*
+import zio.RuntimeFlag.Interruption
 
 import scala.concurrent.duration.*
 
@@ -21,7 +23,6 @@ object JobSpec extends ZIOSpecDefault {
 
   private val secondException = new Exception("second  failed")
 
-  private def pause(duration: FiniteDuration = 10.millis): Unit = Thread.sleep(duration.toMillis)
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs")(
     test("single job") {
@@ -56,35 +57,11 @@ object JobSpec extends ZIOSpecDefault {
     test("exit interrupt immediately") {
       for {
         fiber <- BlockingJob.run(TwoSecondJob).fork
-        _ = pause // allow the thread to get going before interruption
-        exit <- fiber.interrupt.fork
+        _ <- fiber.interruptFork // returns Unit
+        status <- fiber.status
       } yield {
-        logger.info(s"interrupt complete, fiber still running")
-        //
-        // note:  interrupted is not the same as canceled.
-        // even though the fiber was interrupted, it still runs to completion
-        // but in this case the execution of the effect ( the for statement )
-        //   terminates before the fiber completes
-        //
-        // eventually the logging statement from the fiber will show up in the console...
-        //
-        pause(500.millis) // to capture the logging statements of the running thread
-        logger.info(s"waiting ${java.lang.System.currentTimeMillis()}...")
-        pause(500.millis) // to capture the logging statements of the running thread
-        logger.info(s"waiting ${java.lang.System.currentTimeMillis()}...")
-        pause(500.millis) // to capture the logging statements of the running thread
-        logger.info(s"waiting ${java.lang.System.currentTimeMillis()}...")
-        pause(500.millis) // to capture the logging statements of the running thread
-        logger.info(s"waiting ${java.lang.System.currentTimeMillis()}...")
-        pause(500.millis) // to capture the logging statements of the running thread
-        logger.info(s"waiting ${java.lang.System.currentTimeMillis()}...")
-        //
-        // at this point the fiber is still running (as seen by the logging statements)
-        // but we have no way to access it (exit is a unit)
-        // unless we fiber.join inside the for
-        //
-        // by now the fiber has completed ...
-        assertTrue(true)
+        logger.info(s"status: $status")
+        assert(status)(isSubtype[Status.Running](anything))
       }
     },
     test("fiber fails with message") {
@@ -98,7 +75,7 @@ object JobSpec extends ZIOSpecDefault {
           result.isLeft,
           result match {
             case Left(ex) => ex.getMessage == message
-            case Right(_) => false
+            case Right(_) => false // won't happen because of earlier test
           })
       }
     },
