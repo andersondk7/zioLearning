@@ -39,7 +39,7 @@ object BlockingJob {
 
   private val logger = Logger(getClass.getName)
 
-  def run(job: BlockingJob): ZIO[Any, Throwable, Timing] = ZIO.attemptBlocking({
+  def run(job: BlockingJob): ZIO[Any, Throwable, Timing] = ZIO.attemptBlockingInterrupt({
     val timing = Timing.apply()
     logger.info(s"job $job starting at ${timing.start}")
     Thread.sleep(job.duration.toMillis) // blocks the job, not the fiber the job is running in
@@ -48,14 +48,14 @@ object BlockingJob {
     completed
   })
 
-  def runFail(job: BlockingJob, message: String): ZIO[Any, Throwable, BlockingJob] = ZIO.attemptBlocking({
+  def runFail(job: BlockingJob, message: String): ZIO[Any, Throwable, BlockingJob] = ZIO.attemptBlockingInterrupt({
     val timing = Timing.apply()
     logger.info(s"job $job starting at ${timing.start}")
     Thread.sleep(job.duration.toMillis) // blocks the job, not the fiber the job is running in
     throw new Exception(message)
   })
 
-  def runFail(job: BlockingJob, cause: Throwable): ZIO[Any, Throwable, BlockingJob] = ZIO.attemptBlocking({
+  def runFail(job: BlockingJob, cause: Throwable): ZIO[Any, Throwable, BlockingJob] = ZIO.attemptBlockingInterrupt({
     val timing = Timing.apply()
     logger.info(s"job $job starting at ${timing.start}")
     Thread.sleep(job.duration.toMillis) // blocks the job, not the fiber the job is running in
