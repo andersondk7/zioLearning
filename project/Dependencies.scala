@@ -24,9 +24,8 @@ object Dependencies {
   // zio libs
   private val zio = "dev.zio" %% "zio" % zio_version
   private val zioTest = "dev.zio" %% "zio-test" % zio_version % Test
-
-
   private val zioTestSbt = "dev.zio" %% "zio-test-sbt" % zio_version % Test
+  private val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % zio_version % Test
 
   val zioDependencies: Seq[ModuleID] = Seq(
     circeCore,
@@ -36,6 +35,7 @@ object Dependencies {
     logBack,
     zio,
     zioTest,
-    zioTestSbt
+    zioTestSbt,
+    zioTestMagnolia
   )
 }

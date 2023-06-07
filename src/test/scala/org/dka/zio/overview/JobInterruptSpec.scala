@@ -50,9 +50,11 @@ object JobInterruptSpec extends ZIOSpecDefault {
         // not sure why one would want to interrupt a thread that completes anyway
         //  I did not see the 'immediate termination of the fiber'
         //
-        assertTrue(exit.isSuccess)
+        assertTrue(
+          exit.isSuccess,
         // exit contains the result of the fiber, in this case a Timing instance
-        assertTrue(exit.exists(_.finish.isDefined))
+        exit.exists(_.finish.isDefined)
+        )
       }
     }
 
