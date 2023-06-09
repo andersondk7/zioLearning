@@ -15,6 +15,11 @@ object Dependencies {
   private val circeParser = "io.circe" %% "circe-parser" % circe_version
 
   private val logging = "com.typesafe.scala-logging" %% "scala-logging" % scalalogging_version
+  private val scalactic_version = "3.2.15"
+  private val scalatest_version = "3.2.15"
+
+  private val scalatic = "org.scalactic" %% "scalactic" % scalactic_version
+  private val scalaTest = "org.scalatest" %% "scalatest" % scalatest_version % "it,test"
 
 
   // java libs
@@ -33,6 +38,8 @@ object Dependencies {
     circeParser,
     logging,
     logBack,
+    scalatic,
+    scalaTest,
     zio,
     zioTest,
     zioTestSbt,

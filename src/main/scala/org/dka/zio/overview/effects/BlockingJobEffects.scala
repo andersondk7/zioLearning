@@ -1,43 +1,16 @@
-package org.dka.zio.overview
+package org.dka.zio.overview.effects
 
-import zio.*
-import BlockingJob.*
 import com.typesafe.scalalogging.Logger
-import scala.concurrent.duration.*
-import DurationConversions.*
-
-final case class Timing private (start: Long, finish: Option[Long]) {
-
-  def complete: Timing       = this.copy(finish = Some(java.lang.System.currentTimeMillis()))
-
-  val duration: Option[Long] = finish.map(_ - start)
-
-  override def toString: String = s"start: $start, finish: $finish, duration: $duration"
-
-}
-
-object Timing {
-
-  def apply(): Timing = new Timing(
-    start = java.lang.System.currentTimeMillis(),
-    finish = None
-  )
-
-}
+import org.dka.zio.overview.{BlockingJob, Timing}
+import zio.ZIO
 
 /**
- * represents a blocking operation examples: reading a file, query a database etc.
- * @param duration
- *   how long the operation takes
+ * execution of blocking jobs see zio documentation at
+ * https://zio.dev/overview/creating-effects#blocking-synchronous-code
  */
-final case class BlockingJob(duration: FiniteDuration)
+object BlockingJobEffects {
 
-/**
- * execution of blocking jobs
- * see zio documentation at https://zio.dev/overview/creating-effects#blocking-synchronous-code
- */
-object BlockingJob {
-
+  // because the methods in this object are 'blocking', we can use this logger inside...
   private val logger = Logger(getClass.getName)
 
   def run(job: BlockingJob): ZIO[Any, Throwable, Timing] = ZIO.attemptBlockingInterrupt({

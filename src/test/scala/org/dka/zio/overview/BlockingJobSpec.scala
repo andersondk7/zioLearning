@@ -1,6 +1,7 @@
 package org.dka.zio.overview
 
 import com.typesafe.scalalogging.Logger
+import org.dka.zio.overview.effects.BlockingJobEffects
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -9,7 +10,7 @@ import zio.RuntimeFlag.Interruption
 
 import scala.concurrent.duration.*
 
-object JobSpec extends ZIOSpecDefault {
+object BlockingJobSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
 
@@ -19,21 +20,20 @@ object JobSpec extends ZIOSpecDefault {
 
   private val ThreeSecondJob = BlockingJob(3.second)
 
-  private val firstException  = new Exception("first failed")
+  private val firstException = new Exception("first failed")
 
   private val secondException = new Exception("second  failed")
-
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs")(
     test("single job") {
       for {
-        fiber  <- BlockingJob.run(OneSecondJob).fork
+        fiber  <- BlockingJobEffects.run(OneSecondJob).fork
         result <- fiber.join
       } yield assertTrue(result.finish.isDefined)
     },
     test("wait on single job") {
       for {
-        fiber  <- BlockingJob.run(OneSecondJob).fork
+        fiber  <- BlockingJobEffects.run(OneSecondJob).fork
         exit   <- fiber.await
         result <- fiber.join
       } yield {
@@ -45,7 +45,7 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("exit success") {
       for {
-        fiber  <- BlockingJob.run(OneSecondJob).fork
+        fiber  <- BlockingJobEffects.run(OneSecondJob).fork
         exit   <- fiber.await
         result <- fiber.join
       } yield {
@@ -56,8 +56,8 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("exit interrupt immediately") {
       for {
-        fiber <- BlockingJob.run(TwoSecondJob).fork
-        _ <- fiber.interruptFork // returns Unit
+        fiber  <- BlockingJobEffects.run(TwoSecondJob).fork
+        _      <- fiber.interruptFork // returns Unit
         status <- fiber.status
       } yield {
         logger.info(s"status: $status")
@@ -67,7 +67,7 @@ object JobSpec extends ZIOSpecDefault {
     test("fiber fails with message") {
       val message = "expected"
       for {
-        j1     <- BlockingJob.runFail(OneSecondJob, message).fork
+        j1     <- BlockingJobEffects.runFail(OneSecondJob, message).fork
         result <- j1.join.either
       } yield {
         logger.info(s"result: $result")
@@ -82,7 +82,7 @@ object JobSpec extends ZIOSpecDefault {
     test("fiber fails with cause") {
       val cause = new Exception("expected")
       for {
-        j1     <- BlockingJob.runFail(OneSecondJob, cause).fork
+        j1     <- BlockingJobEffects.runFail(OneSecondJob, cause).fork
         result <- j1.join.either
       } yield {
         logger.info(s"result: $result")
@@ -91,8 +91,8 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("compose with zip") {
       for {
-        j1 <- BlockingJob.run(OneSecondJob).fork
-        j2 <- BlockingJob.run(OneSecondJob).fork
+        j1 <- BlockingJobEffects.run(OneSecondJob).fork
+        j2 <- BlockingJobEffects.run(OneSecondJob).fork
         concurrentJobs = j1.zip(j2) // no need for zipPar since they are already running in parallel
         tuple <- concurrentJobs.join
       } yield {
@@ -104,8 +104,8 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("compose first longer than second") {
       for {
-        j1 <- BlockingJob.run(TwoSecondJob).fork
-        j2 <- BlockingJob.run(OneSecondJob).fork
+        j1 <- BlockingJobEffects.run(TwoSecondJob).fork
+        j2 <- BlockingJobEffects.run(OneSecondJob).fork
         fiber = j1.orElse(j2)
         result <- fiber.join
       } yield {
@@ -117,8 +117,8 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("compose first shorter than second") {
       for {
-        j1 <- BlockingJob.run(OneSecondJob).fork
-        j2 <- BlockingJob.run(TwoSecondJob).fork
+        j1 <- BlockingJobEffects.run(OneSecondJob).fork
+        j2 <- BlockingJobEffects.run(TwoSecondJob).fork
         fiber = j1.orElse(j2)
         result <- fiber.join
       } yield {
@@ -135,9 +135,9 @@ object JobSpec extends ZIOSpecDefault {
     test("compose first fail") {
       val message = "expected"
       for {
-        j1 <- BlockingJob.runFail(ThreeSecondJob, message).fork // will fail after about 1.5 seconds
+        j1 <- BlockingJobEffects.runFail(ThreeSecondJob, message).fork // will fail after about 1.5 seconds
         _ = Thread.sleep(10)
-        j2 <- BlockingJob.run(OneSecondJob).fork
+        j2 <- BlockingJobEffects.run(OneSecondJob).fork
         fiber = j1.orElse(j2)
         result <- fiber.join
       } yield {
@@ -152,9 +152,9 @@ object JobSpec extends ZIOSpecDefault {
     },
     test("compose first and second fail") {
       for {
-        j1 <- BlockingJob.runFail(ThreeSecondJob, firstException).fork // will fail after about 1.5 seconds
+        j1 <- BlockingJobEffects.runFail(ThreeSecondJob, firstException).fork // will fail after about 1.5 seconds
         _ = Thread.sleep(10)
-        j2 <- BlockingJob.runFail(OneSecondJob, secondException).fork
+        j2 <- BlockingJobEffects.runFail(OneSecondJob, secondException).fork
         fiber = j1.orElse(j2)
         result <- fiber.join.either
       } yield {
@@ -163,8 +163,8 @@ object JobSpec extends ZIOSpecDefault {
       }
     },
     test("take the first completed") {
-      val longer  = BlockingJob.run(TwoSecondJob)
-      val shorter = BlockingJob.run(OneSecondJob)
+      val longer  = BlockingJobEffects.run(TwoSecondJob)
+      val shorter = BlockingJobEffects.run(OneSecondJob)
       for {
         result <- longer.race(shorter) // jobs start here!
       } yield {
@@ -176,9 +176,9 @@ object JobSpec extends ZIOSpecDefault {
       }
     },
     test("take the first completed of multiple") {
-      val j3 = BlockingJob.run(ThreeSecondJob)
-      val j2 = BlockingJob.run(TwoSecondJob)
-      val j1 = BlockingJob.run(OneSecondJob)
+      val j3 = BlockingJobEffects.run(ThreeSecondJob)
+      val j2 = BlockingJobEffects.run(TwoSecondJob)
+      val j1 = BlockingJobEffects.run(OneSecondJob)
       for {
         result <- j3.race(j2).race(j1) // jobs start here!
       } yield {
@@ -190,9 +190,9 @@ object JobSpec extends ZIOSpecDefault {
       }
     },
     test("take the first success when one fails of multiple") {
-      val j3 = BlockingJob.run(ThreeSecondJob)
-      val j2 = BlockingJob.run(TwoSecondJob)
-      val j1 = BlockingJob.runFail(OneSecondJob, new Exception("first failed"))
+      val j3 = BlockingJobEffects.run(ThreeSecondJob)
+      val j2 = BlockingJobEffects.run(TwoSecondJob)
+      val j1 = BlockingJobEffects.runFail(OneSecondJob, new Exception("first failed"))
       for {
         result <- j3.race(j2).race(j1) // jobs start here!
       } yield {
@@ -205,11 +205,25 @@ object JobSpec extends ZIOSpecDefault {
         )
       }
     },
+    test("exit interrupt but allow for completion") {
+      logger.info("starting run ...")
+      for {
+        fiber <- BlockingJobEffects
+          .run(TwoSecondJob)
+          .fork
+        _    <- ZIO.log("fiber has been started")
+        exit <- fiber.interrupt
+        _    <- ZIO.log("fiber has been interrupted")
+      } yield {
+        logger.info(s"exit: $exit")
+        assertTrue(exit.isFailure)
+      }
+    },
     test("take the first success or failure when one fails of multiple") {
       // the race method works on effects, not fibers...
-      val j3 = BlockingJob.run(ThreeSecondJob)
-      val j2 = BlockingJob.run(TwoSecondJob)
-      val j1 = BlockingJob.runFail(OneSecondJob, firstException).either // needed to catch exception
+      val j3 = BlockingJobEffects.run(ThreeSecondJob)
+      val j2 = BlockingJobEffects.run(TwoSecondJob)
+      val j1 = BlockingJobEffects.runFail(OneSecondJob, firstException).either // needed to catch exception
       for {
         result <- j3.either.race(j2.either).race(j1) // jobs start here!
       } yield {
