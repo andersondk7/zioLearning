@@ -1,13 +1,15 @@
-package org.dka.zio.overview
+package org.dka.zio.overview.zio
 
 import com.typesafe.scalalogging.Logger
+import org.dka.zio.overview.IntegerResource
 import org.dka.zio.overview.effects.IntegerResourceEffects
 import org.dka.zio.overview.effects.IntegerResourceEffects.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object ResourceSpec extends ZIOSpecDefault {
+
+object ResourceZIOSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
 

@@ -1,15 +1,15 @@
-package org.dka.zio.overview
+package org.dka.zio.overview.zio
 
+import cats.Show
+import cats.syntax.all.*
 import com.typesafe.scalalogging.Logger
-import zio.Scope
+import org.dka.zio.overview.Greeting
+import org.dka.zio.overview.effects.GreetingEffects
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import cats.Show
-import cats.syntax.all.*
-import org.dka.zio.overview.effects.GreetingEffects
 
-object GreetingZioSpec extends ZIOSpecDefault {
+object GreetingZIOSpec extends ZIOSpecDefault {
 
   private val logger     = Logger(getClass.getName)
 

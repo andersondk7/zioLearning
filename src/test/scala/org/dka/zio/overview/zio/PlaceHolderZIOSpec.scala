@@ -1,11 +1,11 @@
-package org.dka.zio.overview
+package org.dka.zio.overview.zio
 
 import com.typesafe.scalalogging.Logger
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object PlaceHolderSpec extends ZIOSpecDefault {
+object PlaceHolderZIOSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
 

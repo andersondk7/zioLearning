@@ -1,16 +1,17 @@
-package org.dka.zio.overview
+package org.dka.zio.overview.zio
 
 import com.typesafe.scalalogging.Logger
 import org.dka.zio.overview.effects.BlockingJobEffects
+import org.dka.zio.overview.{BlockingJob, Timing}
 import zio.*
-import zio.test.*
-import zio.test.Assertion.*
 import zio.Fiber.*
 import zio.RuntimeFlag.Interruption
+import zio.test.*
+import zio.test.Assertion.*
 
 import scala.concurrent.duration.*
 
-object BlockingJobSpec extends ZIOSpecDefault {
+object BlockingJobZIOSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
 
@@ -23,6 +24,8 @@ object BlockingJobSpec extends ZIOSpecDefault {
   private val firstException = new Exception("first failed")
 
   private val secondException = new Exception("second  failed")
+  //override val bootstrap: ZLayer[Any, Any, TestEnvironment] =
+    // this is where you would change logging etc.
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs")(
     test("single job") {
