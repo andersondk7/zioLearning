@@ -24,8 +24,8 @@ object BlockingJobZIOSpec extends ZIOSpecDefault {
   private val firstException = new Exception("first failed")
 
   private val secondException = new Exception("second  failed")
-  //override val bootstrap: ZLayer[Any, Any, TestEnvironment] =
-    // this is where you would change logging etc.
+  // override val bootstrap: ZLayer[Any, Any, TestEnvironment] =
+  // this is where you would change logging etc.
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("jobs")(
     test("single job") {

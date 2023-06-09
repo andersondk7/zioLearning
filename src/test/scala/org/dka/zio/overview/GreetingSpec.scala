@@ -10,7 +10,7 @@ class GreetingSpec extends AnyFunSpec with Matchers {
 
   private val salutation = "Hello"
 
-  private val validWho   = "George"
+  private val validWho = "George"
 
   private val invalidWho = ""
 

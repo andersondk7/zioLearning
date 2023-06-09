@@ -4,10 +4,13 @@ import cats.Show
 
 /**
  * Greeting
- * @param who // can't be empty
+ * @param who
+ *   // can't be empty
  */
 final case class Greeting private (salutation: String, who: String) {
+
   def withSalutation(s: String): Greeting = this.copy(salutation = s)
+
 }
 
 object Greeting {

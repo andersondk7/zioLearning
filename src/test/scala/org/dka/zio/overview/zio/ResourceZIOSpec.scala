@@ -8,7 +8,6 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-
 object ResourceZIOSpec extends ZIOSpecDefault {
 
   private val logger = Logger(getClass.getName)
@@ -21,7 +20,7 @@ object ResourceZIOSpec extends ZIOSpecDefault {
     test("fail to acquire a held resource") {
       val heldResource: IntegerResource = IntegerResource(data = initialValue, isHeld = true)
       // create the effect
-      val effect: IntegerResourceEffects.ZIOAttempt =
+      val effect: IntegerResourceEffects.ResourceAttempt =
         IntegerResourceEffects.useResource(heldResource) { attempt =>
           // this will never execute because the resource could not be acquired
           // use succeeded because this can not fail
@@ -46,7 +45,7 @@ object ResourceZIOSpec extends ZIOSpecDefault {
     test("modify a free resource") {
       // get the resource, do something on the resource, free the resource
       val resource = IntegerResource(data = initialValue)
-      val effect: IntegerResourceEffects.ZIOAttempt =
+      val effect: IntegerResourceEffects.ResourceAttempt =
         IntegerResourceEffects.useResource(resource) { attempt =>
           ZIO.succeed(
             attempt.map { resource =>
@@ -66,7 +65,7 @@ object ResourceZIOSpec extends ZIOSpecDefault {
     },
     test("fail nested acquire") {
       val resource = IntegerResource(data = initialValue)
-      val effect: ZIOAttempt =
+      val effect: ResourceAttempt =
         ZIO.acquireReleaseWith(IntegerResourceEffects.acquire(resource))(IntegerResourceEffects.release) { attempt =>
           logger.info(s"first $attempt")
           // this one will fail because the resource as already been acquired

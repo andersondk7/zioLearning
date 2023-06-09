@@ -11,7 +11,7 @@ import zio.test.Assertion.*
 
 object GreetingZIOSpec extends ZIOSpecDefault {
 
-  private val logger     = Logger(getClass.getName)
+  private val logger = Logger(getClass.getName)
 
   private val salutation = "Hello"
 
@@ -21,26 +21,26 @@ object GreetingZIOSpec extends ZIOSpecDefault {
     },
     test("greeting with logging") {
       for {
-        greeting <- ZIO.fromEither(Greeting.apply(salutation, "George")) // left -> fail
-        results  <- GreetingEffects.greet(greeting)
-      } yield {
-        logger.info(s"with logging returned $results")
-        assertTrue(
-          results.contains(greeting.who),
-          results.contains(greeting.salutation)
-        )
-      }
+        greeting <- ZIO.fromEither(Greeting.apply(salutation, "George")) @@ ZIOAspect.debug(
+          "after after step: fromEither") @@ ZIOAspect.annotated("step", "fromEither")
+        // debug debug prints _after_ the effect runs
+        // annotated prints _during_ the run of the effect and appends 'key=value' to the log message
+        results <- GreetingEffects.greet(greeting) @@ ZIOAspect.annotated("step", "greet")
+      } yield assertTrue(
+        results.contains(greeting.who),
+        results.contains(greeting.salutation)
+      )
     },
     test("greeting without logging") {
       val who = "George"
       for {
-        mapping <- ZIO.fromEither(Greeting.apply(salutation, who)) // left -> fail
-        either  <- ZIO.attempt(Greeting.apply(salutation, who))
+        mapping <- ZIO.fromEither(Greeting.apply(salutation, who)) // left -> fail, but this won't fail...
+        either  <- ZIO.attempt(Greeting.apply(salutation, who)) @@ ZIOAspect.logged("aspectLogging: ")
         results <- GreetingEffects.show(either)
       } yield {
-        logger.info(s"withoutLogging: mapping: $mapping")
-        logger.info(s"withoutLogging: either: $either")
-        logger.info(s"withoutLogging: results: $results")
+        logger.info(s"withoutLogging yield: mapping: $mapping")
+        logger.info(s"withoutLogging yield: either: $either")
+        logger.info(s"withoutLogging yield: results: $results")
         assertTrue(
           results.contains(who),
           results.contains(salutation)
@@ -54,27 +54,10 @@ object GreetingZIOSpec extends ZIOSpecDefault {
         _        <- ZIO.log(s"received $either")
         greeting <- GreetingEffects.show(either)
       } yield {
-        logger.info(s"failed message: either: $either")
-        logger.info(s"failed message: greeting: $either")
-        assertTrue(true)
+        assert(either)(isLeft(isSubtype[IllegalArgumentException](anything)))
+        assertTrue(greeting.contains("can not be empty"))
       }
     }
-//
-//    test("chaining") {
-//      val effect = for {
-//        greet <- ZIO.succeed[String]("greetings: ")
-//        withName <- ZIO.succeed[String](s"$greet Mr. Smith")
-//        withFrom <- ZIO.succeed[String](s" $withName from within ZIO")
-//        _ <- ZIO.log(s"final greeting: >$withFrom<")
-//      } yield withFrom
-//
-//      for {
-//        result <- effect
-//      } yield {
-//        logger.info(s"returned: $result")
-//        assertTrue(result. contains("from within ZIO"))
-//      }
-//    }
   )
 
   //
