@@ -142,7 +142,7 @@ object GreetingZIOSpec extends ZIOSpecDefault {
           case Cause.Fail(v, _) =>
             ZIO.debug(s"a failure caught: $v")
           case Cause.Die(value, _) =>
-            ZIO.debug(s"a defect caught: $value")
+            ZIO.debug(s"a defect(die) caught: $value")
           case Cause.Interrupt(fiberId, _) =>
             ZIO.debug(s"a fiber interruption caught with the fiber id: $fiberId")
           case Cause.Stackless(cause: Cause.Die, _) =>
