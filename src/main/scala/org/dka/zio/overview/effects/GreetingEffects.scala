@@ -1,7 +1,5 @@
 package org.dka.zio.overview.effects
 
-import cats.Show
-import cats.syntax.all.*
 import zio.{UIO, ZIO}
 
 import org.dka.zio.overview.Greeting
@@ -14,11 +12,11 @@ object GreetingEffects {
   /**
    * shows the greeting in a ZIO effect
    */
-  def show(greeting: Greeting): UIO[String] = ZIO.succeed(greeting.show)
+  def show(greeting: Greeting): UIO[String] = ZIO.succeed(greeting.present)
 
   def show(errorsOr: GreetingErrorsOr): UIO[String] = ZIO.succeed(errorsOr match {
     case Left(error)     => error.getMessage
-    case Right(greeting) => greeting.show
+    case Right(greeting) => greeting.present
   })
 
   /**
@@ -26,7 +24,7 @@ object GreetingEffects {
    */
   def greet(greeting: Greeting): UIO[String] = for {
     _       <- ZIO.log(s"hello called for $greeting")
-    message <- ZIO.succeed(greeting.show)
+    message <- ZIO.succeed(greeting.present)
     _       <- ZIO.log(s"hello finished for $greeting")
   } yield message
 

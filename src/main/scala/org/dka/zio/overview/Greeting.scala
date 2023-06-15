@@ -1,6 +1,5 @@
 package org.dka.zio.overview
 
-import cats.Show
 
 /**
  * Greeting
@@ -12,6 +11,9 @@ final case class Greeting private (salutation: String, who: String) {
   def withSalutation(s: String): Greeting = this.copy(salutation = s)
 
 }
+
+trait Present[A]:
+  extension (a: A) def present: String
 
 object Greeting {
 
@@ -26,7 +28,8 @@ object Greeting {
 
   val default: Greeting = new Greeting("hello", "???")
 
-  implicit val showGreeting: Show[Greeting] =
-    Show.show(greeting => s"salutation: ${greeting.salutation}, who: ${greeting.who}")
+  given Present[Greeting] with
+    extension (greeting: Greeting) def present: String =
+    s"salutation: ${greeting.salutation}, who: ${greeting.who}"
 
 }
