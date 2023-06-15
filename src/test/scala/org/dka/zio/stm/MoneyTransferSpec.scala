@@ -36,13 +36,13 @@ object MoneyTransferSpec extends ZIOSpecDefault {
     ,
 
     test("retry successful") {
-//      val impl: MoneyTransfer = RetryTransfer
-      val impl: MoneyTransfer = FailFastTransfer
+      val impl: MoneyTransfer = RetryTransfer
+//      val impl: MoneyTransfer = FailFastTransfer
       val attempt = for {
         a1 <- impl.createAmount(250)
         a2 <- impl.createAmount(2000)
         a3 <- impl.createAmount(1000)
-        t1 <- impl.transfer(a1, a2, 500) // will initially fail
+        t1 <- impl.transfer(a1, a2, 500).timeout(100.millis) // will initially fail
         t2 <- impl.transfer(a3, a1, 500) // now a1 has enough money, t1 will succeed
       } yield t2
 
